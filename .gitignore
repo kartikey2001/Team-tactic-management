@@ -1,0 +1,53 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# Local config (DB password) - do not commit
+application-local.yml
+**/application-local.yml
+.env
+.env.*
+!.env.example
+
+# H2 file DB (development data)
+data/
+
+# Logs
+*.log
+logs/
+
+### Mac OS ###
+.DS_Store
+
+### Windows ###
+Thumbs.db
+desktop.ini

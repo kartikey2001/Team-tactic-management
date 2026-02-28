@@ -1,0 +1,9 @@
+# Copy to application-local.yml and set your PostgreSQL password.
+# Run with: --spring.profiles.active=local (or set SPRING_PROFILES_ACTIVE=local)
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    username: postgres
+    password: YOUR_POSTGRES_PASSWORD_HERE

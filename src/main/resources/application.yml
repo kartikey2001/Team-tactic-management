@@ -1,0 +1,78 @@
+# Default: H2 for development (no PostgreSQL required). Use profile "prod" for PostgreSQL.
+spring:
+  application:
+    name: team-tactic
+
+  datasource:
+    url: jdbc:h2:file:./data/team_tactic;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+
+# JWT (use env JWT_SECRET in prod; must be at least 256 bits / 32 chars for HS256)
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-min-32-chars-for-hs256}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+---
+# Production: PostgreSQL. Set SPRING_PROFILES_ACTIVE=prod and DB_* env vars.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:team_tactic}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: public
+  h2:
+    console:
+      enabled: false
+
+---
+# Optional dev profile: in-memory H2, create-drop, show SQL (data cleared each restart)
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:team_tactic;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
