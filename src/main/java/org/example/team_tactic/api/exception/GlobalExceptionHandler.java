@@ -1,7 +1,9 @@
 package org.example.team_tactic.api.exception;
 
 import org.example.team_tactic.api.dto.ErrorResponse;
+import org.example.team_tactic.application.service.AddTeamMemberService;
 import org.example.team_tactic.application.service.GetProfileService;
+import org.example.team_tactic.application.service.GetTeamService;
 import org.example.team_tactic.application.service.LoginService;
 import org.example.team_tactic.application.service.RegisterUserService;
 import org.example.team_tactic.application.service.UpdateTaskService;
@@ -51,6 +53,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(ex.getMessage(), "ASSIGNEE_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(GetTeamService.TeamNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTeamNotFound(GetTeamService.TeamNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getMessage(), "TEAM_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(AddTeamMemberService.NotTeamMemberException.class)
+    public ResponseEntity<ErrorResponse> handleNotTeamMember(AddTeamMemberService.NotTeamMemberException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage(), "NOT_TEAM_MEMBER"));
+    }
+
+    @ExceptionHandler(AddTeamMemberService.AlreadyMemberException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyMember(AddTeamMemberService.AlreadyMemberException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ex.getMessage(), "ALREADY_MEMBER"));
+    }
+
+    @ExceptionHandler(AssignTaskService.AssigneeNotTeamMemberException.class)
+    public ResponseEntity<ErrorResponse> handleAssigneeNotTeamMember(AssignTaskService.AssigneeNotTeamMemberException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage(), "ASSIGNEE_NOT_TEAM_MEMBER"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

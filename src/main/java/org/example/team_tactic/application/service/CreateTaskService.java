@@ -12,16 +12,21 @@ import java.time.Instant;
 public class CreateTaskService {
 
     private final TaskRepository taskRepository;
+    private final GetTeamService getTeamService;
 
-    public CreateTaskService(TaskRepository taskRepository) {
+    public CreateTaskService(TaskRepository taskRepository, GetTeamService getTeamService) {
         this.taskRepository = taskRepository;
+        this.getTeamService = getTeamService;
     }
 
     @Transactional
-    public Task create(String title, String description, Instant dueDate, Long createdById) {
+    public Task create(String title, String description, Instant dueDate, Long createdById, Long teamId) {
+        if (teamId != null && !getTeamService.isMember(teamId, createdById)) {
+            throw new AddTeamMemberService.NotTeamMemberException(teamId, createdById);
+        }
         TaskStatus status = TaskStatus.OPEN;
         Instant now = Instant.now();
-        Task task = new Task(null, title, description, status, dueDate, null, createdById, now, now);
+        Task task = new Task(null, title, description, status, dueDate, teamId, null, createdById, now, now);
         return taskRepository.save(task);
     }
 }

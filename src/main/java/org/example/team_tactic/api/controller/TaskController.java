@@ -52,7 +52,8 @@ public class TaskController {
                 request.title(),
                 request.description(),
                 request.dueDate(),
-                userId
+                userId,
+                request.teamId()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(task));
     }
@@ -60,6 +61,7 @@ public class TaskController {
     @GetMapping
     public ResponseEntity<List<TaskResponse>> list(
             @CurrentUserId Long userId,
+            @RequestParam(required = false) Long teamId,
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) TaskStatus status,
             @RequestParam(required = false) String q,
@@ -67,13 +69,13 @@ public class TaskController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sort,
             @RequestParam(defaultValue = "true") boolean desc) {
-        List<Task> tasks = listTasksService.list(assigneeId, status, q, page, size, sort, desc);
+        List<Task> tasks = listTasksService.list(teamId, assigneeId, status, q, page, size, sort, desc, userId);
         return ResponseEntity.ok(tasks.stream().map(TaskController::toResponse).toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> getById(@CurrentUserId Long userId, @PathVariable Long id) {
-        Task task = listTasksService.getById(id).orElseThrow(() -> new UpdateTaskService.TaskNotFoundException(id));
+        Task task = listTasksService.getByIdAndEnsureAccess(id, userId);
         return ResponseEntity.ok(toResponse(task));
     }
 
@@ -85,21 +87,22 @@ public class TaskController {
                 request.title(),
                 request.description(),
                 request.status(),
-                request.dueDate()
+                request.dueDate(),
+                userId
         );
         return ResponseEntity.ok(toResponse(task));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@CurrentUserId Long userId, @PathVariable Long id) {
-        deleteTaskService.delete(id);
+        deleteTaskService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/assign")
     public ResponseEntity<TaskResponse> assign(@CurrentUserId Long userId, @PathVariable Long id,
                                                @Valid @RequestBody AssignTaskRequest request) {
-        Task task = assignTaskService.assign(id, request.assigneeId());
+        Task task = assignTaskService.assign(id, request.assigneeId(), userId);
         return ResponseEntity.ok(toResponse(task));
     }
 
@@ -110,6 +113,7 @@ public class TaskController {
                 task.getDescription(),
                 task.getStatus(),
                 task.getDueDate(),
+                task.getTeamId(),
                 task.getAssigneeId(),
                 task.getCreatedById(),
                 task.getCreatedAt(),
