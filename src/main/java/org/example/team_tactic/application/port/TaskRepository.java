@@ -20,8 +20,8 @@ public interface TaskRepository {
     boolean existsById(Long id);
 
     /**
-     * Find tasks with optional filters. Pass null for assigneeId/status to ignore.
+     * Find tasks with optional filters. Pass null for teamId/assigneeId/status to ignore.
      * searchTerm matches title/description (case-insensitive contains); null = no search.
      */
-    List<Task> findAll(Long assigneeId, TaskStatus status, String searchTerm, int page, int size, String sortBy, boolean sortDesc);
+    List<Task> findAll(Long teamId, Long assigneeId, TaskStatus status, String searchTerm, int page, int size, String sortBy, boolean sortDesc);
 }

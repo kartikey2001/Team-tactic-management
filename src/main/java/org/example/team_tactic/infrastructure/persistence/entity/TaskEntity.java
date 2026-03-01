@@ -37,6 +37,9 @@ public class TaskEntity {
     @Column(name = "assignee_id")
     private Long assigneeId;
 
+    @Column(name = "team_id")
+    private Long teamId;
+
     @Column(name = "created_by_id", nullable = false)
     private Long createdById;
 
@@ -69,6 +72,8 @@ public class TaskEntity {
     public void setDueDate(Instant dueDate) { this.dueDate = dueDate; }
     public Long getAssigneeId() { return assigneeId; }
     public void setAssigneeId(Long assigneeId) { this.assigneeId = assigneeId; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Long getCreatedById() { return createdById; }
     public void setCreatedById(Long createdById) { this.createdById = createdById; }
     public Instant getCreatedAt() { return createdAt; }

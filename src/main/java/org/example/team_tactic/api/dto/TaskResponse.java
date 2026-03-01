@@ -10,6 +10,7 @@ public record TaskResponse(
         String description,
         TaskStatus status,
         Instant dueDate,
+        Long teamId,
         Long assigneeId,
         Long createdById,
         Instant createdAt,

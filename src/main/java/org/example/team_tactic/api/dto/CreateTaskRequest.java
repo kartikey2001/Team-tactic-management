@@ -13,5 +13,8 @@ public record CreateTaskRequest(
         @Size(max = 5000)
         String description,
 
-        Instant dueDate
+        Instant dueDate,
+
+        /** Optional: scope task to a team (caller must be a member). */
+        Long teamId
 ) {}

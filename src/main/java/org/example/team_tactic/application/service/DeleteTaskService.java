@@ -9,15 +9,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeleteTaskService {
 
     private final TaskRepository taskRepository;
+    private final GetTeamService getTeamService;
 
-    public DeleteTaskService(TaskRepository taskRepository) {
+    public DeleteTaskService(TaskRepository taskRepository, GetTeamService getTeamService) {
         this.taskRepository = taskRepository;
+        this.getTeamService = getTeamService;
     }
 
     @Transactional
-    public void delete(Long taskId) {
-        if (!taskRepository.existsById(taskId)) {
-            throw new UpdateTaskService.TaskNotFoundException(taskId);
+    public void delete(Long taskId, Long requestingUserId) {
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new UpdateTaskService.TaskNotFoundException(taskId));
+        if (task.getTeamId() != null && !getTeamService.isMember(task.getTeamId(), requestingUserId)) {
+            throw new AddTeamMemberService.NotTeamMemberException(task.getTeamId(), requestingUserId);
         }
         taskRepository.deleteById(taskId);
     }

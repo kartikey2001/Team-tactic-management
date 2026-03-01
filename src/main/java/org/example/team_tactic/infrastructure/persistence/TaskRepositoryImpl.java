@@ -46,9 +46,12 @@ public class TaskRepositoryImpl implements TaskRepository {
     }
 
     @Override
-    public List<Task> findAll(Long assigneeId, TaskStatus status, String searchTerm, int page, int size, String sortBy, boolean sortDesc) {
+    public List<Task> findAll(Long teamId, Long assigneeId, TaskStatus status, String searchTerm, int page, int size, String sortBy, boolean sortDesc) {
         Specification<TaskEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            if (teamId != null) {
+                predicates.add(cb.equal(root.get("teamId"), teamId));
+            }
             if (assigneeId != null) {
                 predicates.add(cb.equal(root.get("assigneeId"), assigneeId));
             }
@@ -75,7 +78,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     private Task toDomain(TaskEntity e) {
         return new Task(
                 e.getId(), e.getTitle(), e.getDescription(), e.getStatus(), e.getDueDate(),
-                e.getAssigneeId(), e.getCreatedById(), e.getCreatedAt(), e.getUpdatedAt()
+                e.getTeamId(), e.getAssigneeId(), e.getCreatedById(), e.getCreatedAt(), e.getUpdatedAt()
         );
     }
 
@@ -86,6 +89,7 @@ public class TaskRepositoryImpl implements TaskRepository {
         e.setDescription(t.getDescription());
         e.setStatus(t.getStatus());
         e.setDueDate(t.getDueDate());
+        e.setTeamId(t.getTeamId());
         e.setAssigneeId(t.getAssigneeId());
         e.setCreatedById(t.getCreatedById());
         e.setCreatedAt(t.getCreatedAt());

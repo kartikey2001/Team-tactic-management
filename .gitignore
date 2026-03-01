@@ -3,6 +3,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Compiled & runtime ###
+*.class
+*.war
+*.ear
+*.nar
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws
@@ -28,8 +34,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+### VS Code / Cursor ###
 .vscode/
+.cursor/
 
 # Local config (DB password) - do not commit
 application-local.yml
@@ -40,6 +47,8 @@ application-local.yml
 
 # H2 file DB (development data)
 data/
+*.h2.db
+*.db
 
 # Logs
 *.log
@@ -58,3 +67,24 @@ desktop.ini
 *.swp
 *~
 out/
+
+# Test & coverage output (optional - remove if you want to commit reports)
+surefire-reports/
+failsafe-reports/
+jacoco/
+*.exec
+
+# File uploads / attachments (local storage)
+uploads/
+attachments/
+storage/
+
+# Merge conflict files
+*.orig
+*.rej
+
+# Java / JVM
+*.hprof
+hs_err_pid*
+
+# Maven local (target is already ignored above)

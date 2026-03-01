@@ -12,14 +12,19 @@ import java.time.Instant;
 public class UpdateTaskService {
 
     private final TaskRepository taskRepository;
+    private final GetTeamService getTeamService;
 
-    public UpdateTaskService(TaskRepository taskRepository) {
+    public UpdateTaskService(TaskRepository taskRepository, GetTeamService getTeamService) {
         this.taskRepository = taskRepository;
+        this.getTeamService = getTeamService;
     }
 
     @Transactional
-    public Task update(Long taskId, String title, String description, TaskStatus status, Instant dueDate) {
+    public Task update(Long taskId, String title, String description, TaskStatus status, Instant dueDate, Long requestingUserId) {
         Task task = taskRepository.findById(taskId).orElseThrow(() -> new TaskNotFoundException(taskId));
+        if (task.getTeamId() != null && !getTeamService.isMember(task.getTeamId(), requestingUserId)) {
+            throw new AddTeamMemberService.NotTeamMemberException(task.getTeamId(), requestingUserId);
+        }
         if (title != null) {
             task = task.withTitle(title);
         }
