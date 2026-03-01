@@ -86,5 +86,14 @@ storage/
 # Java / JVM
 *.hprof
 hs_err_pid*
+*.pid
 
-# Maven local (target is already ignored above)
+# Maven
+dependency-reduced-pom.xml
+
+# Spring Boot
+.spring-boot-devtools.properties
+
+# Compiled JARs (except Maven wrapper)
+*.jar
+!.mvn/wrapper/maven-wrapper.jar

@@ -1,5 +1,6 @@
 package org.example.team_tactic.application.service;
 
+import org.example.team_tactic.application.port.NotificationService;
 import org.example.team_tactic.application.port.TaskRepository;
 import org.example.team_tactic.domain.Task;
 import org.example.team_tactic.domain.TaskStatus;
@@ -13,10 +14,13 @@ public class UpdateTaskService {
 
     private final TaskRepository taskRepository;
     private final GetTeamService getTeamService;
+    private final NotificationService notificationService;
 
-    public UpdateTaskService(TaskRepository taskRepository, GetTeamService getTeamService) {
+    public UpdateTaskService(TaskRepository taskRepository, GetTeamService getTeamService,
+                             NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.getTeamService = getTeamService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -38,7 +42,11 @@ public class UpdateTaskService {
             task = task.withDueDate(dueDate);
         }
         task = task.withUpdatedAt(Instant.now());
-        return taskRepository.save(task);
+        task = taskRepository.save(task);
+        if (task.getAssigneeId() != null) {
+            notificationService.publishTaskUpdated(task.getAssigneeId(), task);
+        }
+        return task;
     }
 
     public static final class TaskNotFoundException extends RuntimeException {

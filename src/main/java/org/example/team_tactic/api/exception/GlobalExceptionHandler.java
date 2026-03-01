@@ -2,7 +2,10 @@ package org.example.team_tactic.api.exception;
 
 import org.example.team_tactic.api.dto.ErrorResponse;
 import org.example.team_tactic.application.service.AddTeamMemberService;
+import org.example.team_tactic.application.service.CreateAttachmentService;
+import org.example.team_tactic.application.service.DeleteAttachmentService;
 import org.example.team_tactic.application.service.DeleteCommentService;
+import org.example.team_tactic.application.service.GetAttachmentService;
 import org.example.team_tactic.application.service.GetProfileService;
 import org.example.team_tactic.application.service.GetTeamService;
 import org.example.team_tactic.application.service.LoginService;
@@ -118,6 +121,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(ex.getMessage(), "CANNOT_REMOVE_LAST_OWNER"));
+    }
+
+    @ExceptionHandler(GetAttachmentService.AttachmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAttachmentNotFound(GetAttachmentService.AttachmentNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getMessage(), "ATTACHMENT_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(DeleteAttachmentService.AttachmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDeleteAttachmentNotFound(DeleteAttachmentService.AttachmentNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getMessage(), "ATTACHMENT_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(DeleteAttachmentService.ForbiddenToDeleteAttachmentException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenToDeleteAttachment(DeleteAttachmentService.ForbiddenToDeleteAttachmentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage(), "FORBIDDEN_TO_DELETE_ATTACHMENT"));
+    }
+
+    @ExceptionHandler(CreateAttachmentService.FileTooLargeException.class)
+    public ResponseEntity<ErrorResponse> handleFileTooLarge(CreateAttachmentService.FileTooLargeException ex) {
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ErrorResponse.of(ex.getMessage(), "FILE_TOO_LARGE"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

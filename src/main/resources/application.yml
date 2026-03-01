@@ -26,16 +26,24 @@ spring:
       enabled: true
       path: /h2-console
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 server:
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /
 
 # JWT (use env JWT_SECRET in prod; must be at least 256 bits / 32 chars for HS256)
+# Storage root for file uploads (attachments)
 app:
   jwt:
     secret: ${JWT_SECRET:dev-secret-key-min-32-chars-for-hs256}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  storage:
+    root: ${STORAGE_ROOT:./uploads}
 
 ---
 # Production: PostgreSQL. Set SPRING_PROFILES_ACTIVE=prod and DB_* env vars.
