@@ -2,14 +2,20 @@ package org.example.team_tactic.api.controller;
 
 import jakarta.validation.Valid;
 import org.example.team_tactic.api.dto.AssignTaskRequest;
+import org.example.team_tactic.api.dto.CreateCommentRequest;
 import org.example.team_tactic.api.dto.CreateTaskRequest;
+import org.example.team_tactic.api.dto.CommentResponse;
 import org.example.team_tactic.api.dto.TaskResponse;
 import org.example.team_tactic.api.dto.UpdateTaskRequest;
 import org.example.team_tactic.application.service.AssignTaskService;
+import org.example.team_tactic.application.service.CreateCommentService;
 import org.example.team_tactic.application.service.CreateTaskService;
+import org.example.team_tactic.application.service.DeleteCommentService;
 import org.example.team_tactic.application.service.DeleteTaskService;
+import org.example.team_tactic.application.service.ListCommentsService;
 import org.example.team_tactic.application.service.ListTasksService;
 import org.example.team_tactic.application.service.UpdateTaskService;
+import org.example.team_tactic.domain.Comment;
 import org.example.team_tactic.domain.Task;
 import org.example.team_tactic.domain.TaskStatus;
 import org.springframework.http.HttpStatus;
@@ -35,15 +41,22 @@ public class TaskController {
     private final UpdateTaskService updateTaskService;
     private final DeleteTaskService deleteTaskService;
     private final AssignTaskService assignTaskService;
+    private final CreateCommentService createCommentService;
+    private final ListCommentsService listCommentsService;
+    private final DeleteCommentService deleteCommentService;
 
     public TaskController(CreateTaskService createTaskService, ListTasksService listTasksService,
                           UpdateTaskService updateTaskService, DeleteTaskService deleteTaskService,
-                          AssignTaskService assignTaskService) {
+                          AssignTaskService assignTaskService, CreateCommentService createCommentService,
+                          ListCommentsService listCommentsService, DeleteCommentService deleteCommentService) {
         this.createTaskService = createTaskService;
         this.listTasksService = listTasksService;
         this.updateTaskService = updateTaskService;
         this.deleteTaskService = deleteTaskService;
         this.assignTaskService = assignTaskService;
+        this.createCommentService = createCommentService;
+        this.listCommentsService = listCommentsService;
+        this.deleteCommentService = deleteCommentService;
     }
 
     @PostMapping
@@ -104,6 +117,30 @@ public class TaskController {
                                                @Valid @RequestBody AssignTaskRequest request) {
         Task task = assignTaskService.assign(id, request.assigneeId(), userId);
         return ResponseEntity.ok(toResponse(task));
+    }
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<CommentResponse> createComment(@CurrentUserId Long userId, @PathVariable Long id,
+                                                         @Valid @RequestBody CreateCommentRequest request) {
+        Comment comment = createCommentService.create(id, request.body(), userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toCommentResponse(comment));
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentResponse>> listComments(@CurrentUserId Long userId, @PathVariable Long id) {
+        return ResponseEntity.ok(
+                listCommentsService.listByTaskId(id, userId).stream().map(TaskController::toCommentResponse).toList());
+    }
+
+    @DeleteMapping("/{id}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@CurrentUserId Long userId, @PathVariable Long id,
+                                             @PathVariable Long commentId) {
+        deleteCommentService.delete(commentId, id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    private static CommentResponse toCommentResponse(Comment c) {
+        return new CommentResponse(c.getId(), c.getTaskId(), c.getUserId(), c.getBody(), c.getCreatedAt());
     }
 
     private static TaskResponse toResponse(Task task) {

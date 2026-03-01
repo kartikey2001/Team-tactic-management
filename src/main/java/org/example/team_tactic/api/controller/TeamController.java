@@ -10,10 +10,12 @@ import org.example.team_tactic.application.service.CreateTeamService;
 import org.example.team_tactic.application.service.GetTeamService;
 import org.example.team_tactic.application.service.ListTeamMembersService;
 import org.example.team_tactic.application.service.ListTeamsService;
+import org.example.team_tactic.application.service.RemoveTeamMemberService;
 import org.example.team_tactic.domain.Team;
 import org.example.team_tactic.domain.TeamMember;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -32,15 +35,21 @@ public class TeamController {
     private final GetTeamService getTeamService;
     private final AddTeamMemberService addTeamMemberService;
     private final ListTeamMembersService listTeamMembersService;
+    private final RemoveTeamMemberService removeTeamMemberService;
 
-    public TeamController(CreateTeamService createTeamService, ListTeamsService listTeamsService,
-                          GetTeamService getTeamService, AddTeamMemberService addTeamMemberService,
-                          ListTeamMembersService listTeamMembersService) {
+    public TeamController(
+            CreateTeamService createTeamService,
+            ListTeamsService listTeamsService,
+            GetTeamService getTeamService,
+            AddTeamMemberService addTeamMemberService,
+            ListTeamMembersService listTeamMembersService,
+            RemoveTeamMemberService removeTeamMemberService) {
         this.createTeamService = createTeamService;
         this.listTeamsService = listTeamsService;
         this.getTeamService = getTeamService;
         this.addTeamMemberService = addTeamMemberService;
         this.listTeamMembersService = listTeamMembersService;
+        this.removeTeamMemberService = removeTeamMemberService;
     }
 
     @PostMapping
@@ -72,22 +81,36 @@ public class TeamController {
 
     @PostMapping("/{id}/members")
     public ResponseEntity<TeamMemberResponse> addMember(@CurrentUserId Long userId, @PathVariable Long id,
-                                                        @Valid @RequestBody AddTeamMemberRequest request) {
+            @Valid @RequestBody AddTeamMemberRequest request) {
         TeamMember member = addTeamMemberService.addMember(id, request.userId(), userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(toMemberResponse(member));
     }
 
+    @DeleteMapping("/{id}/members/{memberUserId}")
+    public ResponseEntity<Void> removeMember(
+            @CurrentUserId Long currentUserId,
+            @PathVariable Long id,
+            @PathVariable Long memberUserId) {
+        removeTeamMemberService.remove(id, memberUserId, currentUserId);
+        return ResponseEntity.noContent().build();
+    }
+
     private static TeamResponse toTeamResponse(Team team) {
-        return new TeamResponse(
-                team.getId(),
-                team.getName(),
-                team.getDescription(),
-                team.getCreatedById(),
-                team.getCreatedAt()
-        );
+        Long id = team.getId();
+        String name = team.getName();
+        String description = team.getDescription();
+        Long createdById = team.getCreatedById();
+        Instant createdAt = team.getCreatedAt();
+        return new TeamResponse(id, name, description, createdById, createdAt);
     }
 
     private static TeamMemberResponse toMemberResponse(TeamMember m) {
-        return new TeamMemberResponse(m.getId(), m.getTeamId(), m.getUserId(), m.getRole(), m.getJoinedAt());
+        return new TeamMemberResponse(
+                m.getId(),
+                m.getTeamId(),
+                m.getUserId(),
+                m.getRole(),
+                m.getJoinedAt()
+        );
     }
 }
