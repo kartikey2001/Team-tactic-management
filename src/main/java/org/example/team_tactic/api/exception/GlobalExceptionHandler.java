@@ -4,6 +4,8 @@ import org.example.team_tactic.api.dto.ErrorResponse;
 import org.example.team_tactic.application.service.GetProfileService;
 import org.example.team_tactic.application.service.LoginService;
 import org.example.team_tactic.application.service.RegisterUserService;
+import org.example.team_tactic.application.service.UpdateTaskService;
+import org.example.team_tactic.application.service.AssignTaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,6 +37,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(ex.getMessage(), "USER_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(UpdateTaskService.TaskNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTaskNotFound(UpdateTaskService.TaskNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getMessage(), "TASK_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(AssignTaskService.AssigneeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAssigneeNotFound(AssignTaskService.AssigneeNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getMessage(), "ASSIGNEE_NOT_FOUND"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -51,3 +51,10 @@ logs/
 ### Windows ###
 Thumbs.db
 desktop.ini
+
+# Temporary / backup
+*.tmp
+*.bak
+*.swp
+*~
+out/

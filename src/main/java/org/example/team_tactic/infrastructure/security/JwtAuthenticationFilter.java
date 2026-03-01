@@ -15,10 +15,13 @@ import java.io.IOException;
 import java.util.Collections;
 
 import org.example.team_tactic.application.port.TokenProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
@@ -43,7 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    log.debug("JWT valid but userId claim missing or invalid");
                 }
+            } else {
+                log.info("JWT validation failed for token length={}", token.length());
             }
         }
 
