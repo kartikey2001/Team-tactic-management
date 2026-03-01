@@ -2,19 +2,23 @@ package org.example.team_tactic.api.controller;
 
 import jakarta.validation.Valid;
 import org.example.team_tactic.api.dto.AssignTaskRequest;
+import org.example.team_tactic.api.dto.AttachmentResponse;
 import org.example.team_tactic.api.dto.CreateCommentRequest;
 import org.example.team_tactic.api.dto.CreateTaskRequest;
 import org.example.team_tactic.api.dto.CommentResponse;
 import org.example.team_tactic.api.dto.TaskResponse;
 import org.example.team_tactic.api.dto.UpdateTaskRequest;
 import org.example.team_tactic.application.service.AssignTaskService;
+import org.example.team_tactic.application.service.CreateAttachmentService;
 import org.example.team_tactic.application.service.CreateCommentService;
 import org.example.team_tactic.application.service.CreateTaskService;
 import org.example.team_tactic.application.service.DeleteCommentService;
 import org.example.team_tactic.application.service.DeleteTaskService;
+import org.example.team_tactic.application.service.ListAttachmentsService;
 import org.example.team_tactic.application.service.ListCommentsService;
 import org.example.team_tactic.application.service.ListTasksService;
 import org.example.team_tactic.application.service.UpdateTaskService;
+import org.example.team_tactic.domain.Attachment;
 import org.example.team_tactic.domain.Comment;
 import org.example.team_tactic.domain.Task;
 import org.example.team_tactic.domain.TaskStatus;
@@ -29,7 +33,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -44,11 +51,15 @@ public class TaskController {
     private final CreateCommentService createCommentService;
     private final ListCommentsService listCommentsService;
     private final DeleteCommentService deleteCommentService;
+    private final CreateAttachmentService createAttachmentService;
+    private final ListAttachmentsService listAttachmentsService;
 
     public TaskController(CreateTaskService createTaskService, ListTasksService listTasksService,
                           UpdateTaskService updateTaskService, DeleteTaskService deleteTaskService,
                           AssignTaskService assignTaskService, CreateCommentService createCommentService,
-                          ListCommentsService listCommentsService, DeleteCommentService deleteCommentService) {
+                          ListCommentsService listCommentsService, DeleteCommentService deleteCommentService,
+                          CreateAttachmentService createAttachmentService,
+                          ListAttachmentsService listAttachmentsService) {
         this.createTaskService = createTaskService;
         this.listTasksService = listTasksService;
         this.updateTaskService = updateTaskService;
@@ -57,6 +68,8 @@ public class TaskController {
         this.createCommentService = createCommentService;
         this.listCommentsService = listCommentsService;
         this.deleteCommentService = deleteCommentService;
+        this.createAttachmentService = createAttachmentService;
+        this.listAttachmentsService = listAttachmentsService;
     }
 
     @PostMapping
@@ -137,6 +150,31 @@ public class TaskController {
                                              @PathVariable Long commentId) {
         deleteCommentService.delete(commentId, id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/attachments")
+    public ResponseEntity<AttachmentResponse> uploadAttachment(@CurrentUserId Long userId, @PathVariable Long id,
+                                                              @RequestParam("file") MultipartFile file) throws IOException {
+        try (InputStream inputStream = file.getInputStream()) {
+            Attachment attachment = createAttachmentService.create(
+                    id, file.getOriginalFilename(), file.getContentType(), file.getSize(),
+                    inputStream, userId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toAttachmentResponse(attachment));
+        }
+    }
+
+    @GetMapping("/{id}/attachments")
+    public ResponseEntity<List<AttachmentResponse>> listAttachments(@CurrentUserId Long userId, @PathVariable Long id) {
+        return ResponseEntity.ok(
+                listAttachmentsService.listByTaskId(id, userId).stream()
+                        .map(TaskController::toAttachmentResponse)
+                        .toList());
+    }
+
+    private static AttachmentResponse toAttachmentResponse(Attachment a) {
+        return new AttachmentResponse(
+                a.getId(), a.getTaskId(), a.getUserId(), a.getFileName(),
+                a.getContentType(), a.getSize(), a.getCreatedAt());
     }
 
     private static CommentResponse toCommentResponse(Comment c) {

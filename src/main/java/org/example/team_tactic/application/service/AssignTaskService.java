@@ -1,5 +1,6 @@
 package org.example.team_tactic.application.service;
 
+import org.example.team_tactic.application.port.NotificationService;
 import org.example.team_tactic.application.port.TaskRepository;
 import org.example.team_tactic.application.port.UserRepository;
 import org.example.team_tactic.domain.Task;
@@ -12,11 +13,14 @@ public class AssignTaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final GetTeamService getTeamService;
+    private final NotificationService notificationService;
 
-    public AssignTaskService(TaskRepository taskRepository, UserRepository userRepository, GetTeamService getTeamService) {
+    public AssignTaskService(TaskRepository taskRepository, UserRepository userRepository,
+                             GetTeamService getTeamService, NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.getTeamService = getTeamService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -34,7 +38,11 @@ public class AssignTaskService {
             }
         }
         task = task.withAssigneeId(assigneeId).withUpdatedAt(java.time.Instant.now());
-        return taskRepository.save(task);
+        task = taskRepository.save(task);
+        if (assigneeId != null) {
+            notificationService.publishTaskAssigned(assigneeId, task);
+        }
+        return task;
     }
 
     public static final class AssigneeNotFoundException extends RuntimeException {
