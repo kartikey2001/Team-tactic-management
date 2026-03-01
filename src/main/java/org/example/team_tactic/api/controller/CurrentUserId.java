@@ -10,10 +10,11 @@ import java.lang.annotation.Target;
 
 /**
  * Binds the current authenticated user's ID (Long) from JWT.
+ * The principal is the userId set by JwtAuthenticationFilter.
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@AuthenticationPrincipal(expression = "principal")
+@AuthenticationPrincipal
 public @interface CurrentUserId {
 }

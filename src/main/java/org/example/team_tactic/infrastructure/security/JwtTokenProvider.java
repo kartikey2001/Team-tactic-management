@@ -1,9 +1,13 @@
 package org.example.team_tactic.infrastructure.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.example.team_tactic.application.port.TokenProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +18,7 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider implements TokenProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
     private static final String CLAIM_USER_ID = "userId";
 
     private final SecretKey secretKey;
@@ -61,7 +66,14 @@ public class JwtTokenProvider implements TokenProvider {
                     .build()
                     .parseSignedClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            log.debug("JWT expired: {}", e.getMessage());
+            return false;
+        } catch (SignatureException e) {
+            log.warn("JWT signature invalid: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.warn("JWT validation failed: {}", e.getMessage());
             return false;
         }
     }
