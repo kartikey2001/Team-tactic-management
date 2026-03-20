@@ -2,6 +2,8 @@ package org.example.team_tactic.infrastructure.notification;
 
 import org.example.team_tactic.application.port.NotificationService;
 import org.example.team_tactic.domain.Task;
+import org.example.team_tactic.infrastructure.notification.dto.NotificationEventDto;
+import org.example.team_tactic.infrastructure.notification.dto.TaskNotificationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Map;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class SseNotificationService implements NotificationService {
 
-    private static final long EMITTER_TIMEOUT_MS = 60_000;
     private static final Logger log = LoggerFactory.getLogger(SseNotificationService.class);
 
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
@@ -54,7 +56,11 @@ public class SseNotificationService implements NotificationService {
         SseEmitter emitter = emitters.get(userId);
         if (emitter == null) return;
         try {
-            Map<String, Object> payload = Map.of("type", type, "task", task);
+            NotificationEventDto payload = new NotificationEventDto(
+                    type,
+                    Instant.now(),
+                    TaskNotificationDto.from(task)
+            );
             emitter.send(SseEmitter.event().name("notification").data(payload));
         } catch (IOException e) {
             log.warn("Failed to send notification to user {}: {}", userId, e.getMessage());
