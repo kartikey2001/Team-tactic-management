@@ -33,7 +33,7 @@ A REST API backend for a task tracking and team collaboration application. Built
 - **Task attributes** – Title, description, status (OPEN, IN_PROGRESS, COMPLETED), due date
 - **Task assignment** – Assign tasks to team members or unassign
 - **Filtering & search** – Filter by status, assignee, team; search by title or description (case-insensitive)
-- **Sorting & pagination** – Sort by any field; paginate results
+- **Sorting & pagination** – Sort by allowlisted fields (`createdAt`, `updatedAt`, `dueDate`, `title`, `status`), with pagination support
 
 ### Team Collaboration
 
@@ -52,12 +52,14 @@ A REST API backend for a task tracking and team collaboration application. Built
 - **Server-Sent Events** – Subscribe to receive live notifications
 - **Task assigned** – Notified when a task is assigned to you
 - **Task updated** – Notified when a task you are assigned to is updated
+- **Stable DTO payload** – Notifications send dedicated DTOs, not raw domain models
 
 ### Error Handling & Validation
 
 - **Global exception handler** – Consistent error responses with `error` and `code` fields
 - **Bean Validation** – All input DTOs validated; clear error messages for invalid fields
 - **HTTP status codes** – 400, 401, 403, 404, 409, 413, 422 as appropriate
+- **Production JWT guard** – Startup fails fast in `prod` if JWT secret is missing/weak/blocked or token expiry is invalid
 
 ---
 
@@ -166,6 +168,17 @@ Expected: `{"status":"UP"}`
 
 **Production:** Set `JWT_SECRET` and `DB_PASSWORD` (and other `DB_*` vars) via environment. Do not commit secrets. Use `application-local.yml` (gitignored) for local overrides.
 
+### Production JWT hardening
+
+When `prod` profile is active, startup validation enforces:
+
+- `app.jwt.secret` must be present and non-blank
+- secret length must be at least 32 characters
+- blocked insecure secrets are rejected (e.g. `changeme`, `secret`, dev default)
+- `app.jwt.expiration-ms` must be positive
+
+If any check fails, the application exits at startup with a clear error.
+
 ---
 
 ## API Reference
@@ -237,7 +250,31 @@ All endpoints except `/api/v1/auth/**` and `/api/v1/health` require a valid JWT 
 |--------|----------|-------------|
 | GET | `/api/v1/notifications/subscribe` | Subscribe to SSE stream (returns `text/event-stream`) |
 
-Events: `TASK_ASSIGNED`, `TASK_UPDATED` – payload includes `type` and `task` object.
+Events: `TASK_ASSIGNED`, `TASK_UPDATED` – payload format:
+
+```json
+{
+  "type": "TASK_ASSIGNED",
+  "timestamp": "2026-03-01T12:34:56.789Z",
+  "task": {
+    "id": 1,
+    "title": "Task title",
+    "description": "Task description",
+    "status": "OPEN",
+    "dueDate": "2026-03-15T12:00:00Z",
+    "teamId": 10,
+    "assigneeId": 2,
+    "createdById": 1,
+    "createdAt": "2026-03-01T10:00:00Z",
+    "updatedAt": "2026-03-01T12:34:56.789Z"
+  }
+}
+```
+
+### API behavior notes
+
+- `GET /api/v1/tasks?sort=...` accepts only: `createdAt`, `updatedAt`, `dueDate`, `title`, `status`
+- invalid `sort` value returns `400 BAD_REQUEST`
 
 ---
 
@@ -294,6 +331,20 @@ Use conventional branch names: `feature/`, `fix/`, `docs/`, `refactor/`.
 
 ```bash
 mvn test
+```
+
+### Current unit-test baseline
+
+The project currently includes unit tests for key business services:
+
+- `AssignTaskServiceTest`
+- `UpdateTaskServiceTest`
+- `DeleteCommentServiceTest`
+
+Run only these tests:
+
+```bash
+mvn -Dtest=AssignTaskServiceTest,UpdateTaskServiceTest,DeleteCommentServiceTest test
 ```
 
 ### 5. Commit
